@@ -24,6 +24,7 @@ import com.yahoo.ycsb.Status;
 import com.yahoo.ycsb.StringByteIterator;
 
 import java.util.*;
+import java.nio.file.*;
 
 import server.VCDMapServer;
 import client.VCDMapClient;
@@ -55,6 +56,11 @@ public class VCDMapYCSBClient extends DB {
 
         server1 = new VCDMapServer<>("table1", localReads, verbose, config);
         client1 = new VCDMapClient<>("Client1", true, server1);
+
+        Path path = Paths.get("/tmp/map.ser");
+        if(Files.exists(path)){
+          server1.setMapFromFile();
+        }
 
         server1.serverInit();
       }
@@ -98,12 +104,16 @@ public class VCDMapYCSBClient extends DB {
     return Status.OK;
   }
 
-  /*
   @Override
   public void cleanup() {
-    server1.serverClose();
+    synchronized (VCDMapYCSBClient.class){
+      Path path = Paths.get("/tmp/map.ser");
+      if(Files.notExists(path)){
+        System.out.println("Saving mapCopy to disk");
+        server1.saveMap();
+      }
+    }
   }
-  */
 
   @Override
   public Status insert(String table, String key, Map<String, ByteIterator> values) {
